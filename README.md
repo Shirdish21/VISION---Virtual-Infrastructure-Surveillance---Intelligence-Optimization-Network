@@ -109,4 +109,4 @@ Assets are visualized on Smart City Map ↓
 
 Health score indicates infrastructure condition
 
-https://github.com/Shirdish21/VISION---Virtual-Infrastructure-Surveillance---Intelligence-Optimization-Network/issues/1#issue-4035069567
+[https://github.com/Shirdish21/VISION---Virtual-Infrastructure-Surveillance---Intelligence-Optimization-Network/issues/1#issue-4035069567](https://github.com/Shirdish21/VISION---Virtual-Infrastructure-Surveillance---Intelligence-Optimization-Network/blob/c9775f068a15ad357e868591a1ac2d1afd4b4f7c/System%20Architecture.jpeg)
