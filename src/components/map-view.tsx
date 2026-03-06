@@ -1,21 +1,22 @@
-
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
-import { MapContainer, TileLayer, CircleMarker, Popup } from "react-leaflet";
-import "leaflet/dist/leaflet.css";
+import { useEffect, useState, useRef } from "react";
+import L from "leaflet";
 import { db } from "@/lib/firebase";
 import { collection, onSnapshot } from "firebase/firestore";
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import type { InfrastructureAsset } from "@/lib/definitions";
 
 // Default center: Chennai, India
 const DEFAULT_CENTER: [number, number] = [13.0827, 80.2707];
 
 export default function MapView() {
+  const mapContainerRef = useRef<HTMLDivElement>(null);
+  const mapInstanceRef = useRef<L.Map | null>(null);
+  const markersLayerRef = useRef<L.LayerGroup | null>(null);
   const [assets, setAssets] = useState<InfrastructureAsset[]>([]);
 
+  // 1. Fetch assets from Firestore
   useEffect(() => {
     const unsub = onSnapshot(collection(db, "infrastructure"), (snapshot) => {
       setAssets(
@@ -37,65 +38,105 @@ export default function MapView() {
     return unsub;
   }, []);
 
-  const getMarkerColor = (score: number) => {
-    if (score > 70) return "#10b981"; // Emerald 500
-    if (score >= 40) return "#f59e0b"; // Amber 500
-    return "#ef4444"; // Red 500
-  };
+  // 2. Initialize Map once and handle cleanup
+  useEffect(() => {
+    if (!mapContainerRef.current) return;
+
+    // Fix: If a map instance already exists on this container, remove it
+    if (mapInstanceRef.current) {
+      mapInstanceRef.current.remove();
+      mapInstanceRef.current = null;
+    }
+
+    // Initialize Leaflet Map
+    const map = L.map(mapContainerRef.current, {
+      zoomControl: true,
+      scrollWheelZoom: true,
+    }).setView(DEFAULT_CENTER, 12);
+    
+    mapInstanceRef.current = map;
+
+    // Add OpenStreetMap Layer
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    }).addTo(map);
+
+    // Initialize markers layer
+    markersLayerRef.current = L.layerGroup().addTo(map);
+
+    // Cleanup function to destroy map instance when component unmounts or re-renders
+    return () => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+      }
+    };
+  }, []);
+
+  // 3. Update Markers when assets data changes
+  useEffect(() => {
+    if (!mapInstanceRef.current || !markersLayerRef.current) return;
+
+    const markersLayer = markersLayerRef.current;
+    markersLayer.clearLayers();
+
+    const getMarkerColor = (score: number) => {
+      if (score > 70) return "#10b981"; // Emerald 500
+      if (score >= 40) return "#f59e0b"; // Amber 500
+      return "#ef4444"; // Red 500
+    };
+
+    assets.forEach((asset) => {
+      if (asset.lat && asset.lng) {
+        const markerColor = getMarkerColor(asset.healthScore);
+        const marker = L.circleMarker([asset.lat, asset.lng], {
+          radius: 10,
+          fillColor: markerColor,
+          fillOpacity: 0.8,
+          color: "#ffffff",
+          weight: 2,
+        });
+
+        const popupContent = `
+          <div class="p-1 min-w-[160px] font-body">
+            <h3 class="text-sm font-black mb-2" style="color: #2563eb;">${asset.name}</h3>
+            <div style="font-size: 11px; display: flex; flex-direction: column; gap: 4px;">
+              <div style="display: flex; justify-content: space-between;">
+                <span style="color: #64748b; font-weight: 700; text-transform: uppercase;">Type:</span>
+                <span style="font-weight: 700;">${asset.type}</span>
+              </div>
+              <div style="display: flex; justify-content: space-between;">
+                <span style="color: #64748b; font-weight: 700; text-transform: uppercase;">Location:</span>
+                <span style="font-weight: 700;">${asset.location}</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="color: #64748b; font-weight: 700; text-transform: uppercase;">Status:</span>
+                <span style="background: #2563eb; color: white; padding: 1px 4px; border-radius: 4px; font-size: 9px; font-weight: 900; text-transform: uppercase;">${asset.status}</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 4px; border-top: 1px solid #e2e8f0; margin-top: 2px;">
+                <span style="color: #64748b; font-weight: 700; text-transform: uppercase;">Health:</span>
+                <span style="font-weight: 900; font-size: 13px; color: ${markerColor}">${asset.healthScore}%</span>
+              </div>
+            </div>
+          </div>
+        `;
+
+        marker.bindPopup(popupContent, {
+          closeButton: false,
+          className: 'vision-map-popup'
+        });
+        marker.addTo(markersLayer);
+      }
+    });
+  }, [assets]);
 
   return (
     <Card className="w-full h-[600px] overflow-hidden border-none shadow-2xl ring-1 ring-border rounded-xl animate-in-fade relative z-0">
-      <MapContainer
-        center={DEFAULT_CENTER}
-        zoom={12}
-        style={{ height: "100%", width: "100%" }}
-        scrollWheelZoom={true}
-        className="z-0"
-      >
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
-        {assets.map((asset) => (
-          <CircleMarker
-            key={asset.id}
-            center={[asset.lat!, asset.lng!]}
-            radius={10}
-            pathOptions={{
-              fillColor: getMarkerColor(asset.healthScore),
-              fillOpacity: 0.8,
-              color: "#ffffff",
-              weight: 2,
-            }}
-          >
-            <Popup className="vision-popup">
-              <div className="p-1">
-                <h3 className="text-sm font-black mb-1 text-primary">{asset.name}</h3>
-                <div className="space-y-1 text-[11px]">
-                  <p className="flex justify-between">
-                    <span className="text-muted-foreground font-bold uppercase tracking-tighter">Type:</span>
-                    <span className="font-bold">{asset.type}</span>
-                  </p>
-                  <p className="flex justify-between">
-                    <span className="text-muted-foreground font-bold uppercase tracking-tighter">Location:</span>
-                    <span className="font-bold">{asset.location}</span>
-                  </p>
-                  <p className="flex justify-between gap-4">
-                    <span className="text-muted-foreground font-bold uppercase tracking-tighter">Status:</span>
-                    <Badge className="h-4 px-1 text-[9px] font-black uppercase">{asset.status}</Badge>
-                  </p>
-                  <p className="flex justify-between items-center pt-1 border-t mt-1">
-                    <span className="text-muted-foreground font-bold uppercase tracking-tighter">Health:</span>
-                    <span className="text-sm font-black" style={{ color: getMarkerColor(asset.healthScore) }}>
-                      {asset.healthScore}%
-                    </span>
-                  </p>
-                </div>
-              </div>
-            </Popup>
-          </CircleMarker>
-        ))}
-      </MapContainer>
+      <div 
+        ref={mapContainerRef} 
+        className="w-full h-full z-0" 
+        aria-label="City Infrastructure Map"
+      />
       
       {/* Custom Map Legend */}
       <div className="absolute bottom-6 left-6 z-[1000] bg-background/90 backdrop-blur-md p-4 rounded-lg border shadow-xl flex flex-col gap-3 pointer-events-none sm:pointer-events-auto">
