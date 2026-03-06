@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useState } from "react";
@@ -10,7 +9,8 @@ import {
   CheckCircle2, 
   Wrench, 
   AlertTriangle, 
-  MessageSquare 
+  MessageSquare,
+  ArrowUpRight
 } from "lucide-react";
 import type { DashboardStats } from "@/lib/definitions";
 
@@ -49,25 +49,28 @@ export default function DashboardOverview() {
   }, []);
 
   const cards = [
-    { title: "Total Assets", value: stats.totalAssets, icon: Building2, color: "text-blue-500" },
-    { title: "Operational", value: stats.operational, icon: CheckCircle2, color: "text-green-500" },
-    { title: "Maintenance", value: stats.maintenance, icon: Wrench, color: "text-yellow-500" },
-    { title: "Critical", value: stats.critical, icon: AlertTriangle, color: "text-red-500" },
-    { title: "Reported Issues", value: stats.reportedIssues, icon: MessageSquare, color: "text-purple-500" },
+    { title: "Total Assets", value: stats.totalAssets, icon: Building2, color: "text-blue-500", bg: "bg-blue-500/10" },
+    { title: "Operational", value: stats.operational, icon: CheckCircle2, color: "text-emerald-500", bg: "bg-emerald-500/10" },
+    { title: "Maintenance", value: stats.maintenance, icon: Wrench, color: "text-amber-500", bg: "bg-amber-500/10" },
+    { title: "Critical", value: stats.critical, icon: AlertTriangle, color: "text-rose-500", bg: "bg-rose-500/10" },
+    { title: "Reported Issues", value: stats.reportedIssues, icon: MessageSquare, color: "text-violet-500", bg: "bg-violet-500/10" },
   ];
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-5">
       {cards.map((card) => (
-        <Card key={card.title} className="overflow-hidden border-t-4" style={{ borderTopColor: 'currentColor' }}>
+        <Card key={card.title} className="card-hover border-none shadow-sm ring-1 ring-border">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-              {card.title}
-            </CardTitle>
-            <card.icon className={`h-4 w-4 ${card.color}`} />
+            <div className={`p-2 rounded-lg ${card.bg}`}>
+              <card.icon className={`h-5 w-5 ${card.color}`} />
+            </div>
+            <ArrowUpRight className="h-4 w-4 text-muted-foreground/50" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{card.value}</div>
+          <CardContent className="pt-4">
+            <div className="text-3xl font-bold tracking-tight">{card.value}</div>
+            <p className="text-xs font-medium text-muted-foreground mt-1 uppercase tracking-wider">
+              {card.title}
+            </p>
           </CardContent>
         </Card>
       ))}

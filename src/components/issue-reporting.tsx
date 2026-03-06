@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -11,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { Send, AlertCircle } from "lucide-react";
 
 export default function IssueReporting() {
   const { toast } = useToast();
@@ -31,29 +31,34 @@ export default function IssueReporting() {
 
     try {
       await addDoc(collection(db, "issues"), issueData);
-      toast({ title: "Issue Reported", description: "City authorities have been notified of the problem." });
+      toast({ title: "Signal Sent", description: "Civil authorities have received the alert." });
       (event.target as HTMLFormElement).reset();
     } catch (error) {
-      toast({ variant: "destructive", title: "Error", description: "Failed to report issue. Please try again." });
+      toast({ variant: "destructive", title: "Transmission Failed", description: "Could not sync report with central database." });
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Report Infrastructure Issue</CardTitle>
-        <CardDescription>Help us maintain the city by reporting damages or utility failures.</CardDescription>
+    <Card className="border-none shadow-xl ring-1 ring-border overflow-hidden">
+      <div className="bg-destructive h-2 w-full" />
+      <CardHeader className="pb-8">
+        <div className="flex items-center gap-2 text-destructive mb-2">
+           <AlertCircle className="h-5 w-5" />
+           <span className="text-xs font-bold uppercase tracking-widest">Incident Alert</span>
+        </div>
+        <CardTitle className="text-2xl font-bold">Report Infrastructure Issue</CardTitle>
+        <CardDescription>Flag urban failures or system hazards for immediate attention.</CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="issueType">Issue Type</Label>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="grid gap-6 md:grid-cols-2">
+            <div className="space-y-3">
+              <Label htmlFor="issueType" className="text-sm font-bold">Category of Failure</Label>
               <Select name="issueType" required>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select type" />
+                <SelectTrigger className="bg-muted/30 h-11">
+                  <SelectValue placeholder="Select incident type" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Pothole">Pothole</SelectItem>
@@ -63,23 +68,30 @@ export default function IssueReporting() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="location">Location</Label>
-              <Input id="location" name="location" placeholder="Street address or vicinity" required />
+            <div className="space-y-3">
+              <Label htmlFor="location" className="text-sm font-bold">Precise Location</Label>
+              <Input id="location" name="location" placeholder="Street address or GPS vicinity" required className="bg-muted/30 h-11" />
             </div>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
-            <Textarea 
-              id="description" 
-              name="description" 
-              placeholder="Describe the issue in detail..." 
-              rows={4} 
-              required 
-            />
+          <div className="space-y-3">
+            <Label htmlFor="description" className="text-sm font-bold">Detailed Incident Log</Label>
+            <div className="relative">
+              <Textarea 
+                id="description" 
+                name="description" 
+                placeholder="Provide specific technical details of the failure..." 
+                rows={5} 
+                required 
+                className="bg-muted/30 resize-none pt-4"
+              />
+            </div>
           </div>
-          <Button type="submit" className="w-full" variant="accent" disabled={loading}>
-            {loading ? "Submitting Report..." : "Submit Issue Report"}
+          <Button type="submit" className="w-full h-12 text-base font-bold shadow-lg" variant="destructive" disabled={loading}>
+            {loading ? "Broadcasting Alert..." : (
+              <span className="flex items-center gap-2">
+                <Send className="h-5 w-5" /> Dispatch Issue Report
+              </span>
+            )}
           </Button>
         </form>
       </CardContent>
