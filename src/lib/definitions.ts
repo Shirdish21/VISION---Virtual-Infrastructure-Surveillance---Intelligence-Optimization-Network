@@ -30,3 +30,21 @@ export type DashboardStats = {
   critical: number;
   reportedIssues: number;
 };
+
+// State types for legacy AI flows to prevent module-not-found errors
+export type AssistantState = {
+  suggestion?: string;
+  error?: string | {
+    taskDescription?: string[];
+  };
+};
+
+export type CalibrationState = {
+  suggestion?: {
+    suggestedSensitivityAdjustment: number;
+    explanation: string;
+  };
+  error?: string | {
+    sensitivityFeedback?: string[];
+  };
+};
