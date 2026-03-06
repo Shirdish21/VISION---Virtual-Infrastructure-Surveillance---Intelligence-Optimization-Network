@@ -94,3 +94,17 @@ VISION includes a modern admin dashboard with:
 ---
 
 ## 🧱 System Architecture
+
+Admin opens VISION Dashboard
+
+Admin registers infrastructure assets ↓
+
+Asset data stored in Firebase Firestore ↓
+
+Dashboard updates infrastructure statistics ↓
+
+Infrastructure assets appear in Asset Table ↓
+
+Assets are visualized on Smart City Map ↓
+
+Health score indicates infrastructure condition
