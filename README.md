@@ -108,3 +108,5 @@ Infrastructure assets appear in Asset Table ↓
 Assets are visualized on Smart City Map ↓
 
 Health score indicates infrastructure condition
+
+https://github.com/Shirdish21/VISION---Virtual-Infrastructure-Surveillance---Intelligence-Optimization-Network/issues/1#issue-4035069567
